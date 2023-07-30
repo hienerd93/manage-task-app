@@ -1,16 +1,11 @@
-import {
-  Image,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-  FlatList,
-  StyleSheet,
-} from "react-native";
+import { Pressable, Text, TextInput, View, FlatList } from "react-native";
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Checkbox from "expo-checkbox";
 import Toast from "react-native-root-toast";
+import EStyleSheet from "react-native-extended-stylesheet";
+import { Picker } from "@react-native-picker/picker";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 
 const TodoList = () => {
   const [tasks, setTasks] = useState([]);
@@ -112,28 +107,34 @@ const TodoList = () => {
   });
 
   return (
-    <View className="container">
-      <View className="todo-app">
-        <Text>Todo List</Text>
-        <View className="row">
-          <TextInput
-            placeholder="Add your todo"
-            autoFocus
-            value={inputValue}
-            onChangeText={(text) => handleInputChange(text)}
-          />
-          <Pressable onPress={() => handleSubmitText()}>
-            <Text>{editTaskId ? "Update" : "Add"}</Text>
-          </Pressable>
-        </View>
-        <View>
-          <Pressable onPress={() => handleCompleteAll()}>
-            <Text>Complete all tasks</Text>
-          </Pressable>
-          <Pressable onPress={() => handleClearCompleted()}>
-            <Text>Delete comp tasks</Text>
-          </Pressable>
-        </View>
+    <View style={[styles.container, styles.minHeight, styles.padding]}>
+      <View style={styles.section}>
+        <Text style={styles.paragraph}>Todo List</Text>
+      </View>
+      <View style={[styles.section]}>
+        <TextInput
+          style={[styles.container, styles.lgText]}
+          placeholder="Add your todo"
+          autoFocus
+          value={inputValue}
+          onChangeText={(text) => handleInputChange(text)}
+        />
+        <Pressable style={styles.pressable} onPress={() => handleSubmitText()}>
+          <Text style={styles.lgText}>{editTaskId ? "Update" : "Add"}</Text>
+        </Pressable>
+      </View>
+      <View style={styles.section}>
+        <Pressable style={styles.pressable} onPress={() => handleCompleteAll()}>
+          <Text style={styles.color}>Complete all tasks</Text>
+        </Pressable>
+        <Pressable
+          style={styles.pressable}
+          onPress={() => handleClearCompleted()}
+        >
+          <Text style={styles.color}>Delete comp tasks</Text>
+        </Pressable>
+      </View>
+      <View style={[styles.section, styles.container, styles.alignItemsStart]}>
         <FlatList
           data={filteredTasks}
           renderItem={({ item }) => (
@@ -143,64 +144,90 @@ const TodoList = () => {
                 value={item.completed}
                 onValueChange={() => handleTaskCheckboxChange(item.id)}
               />
-              <Text>{item.title}</Text>
-              <View>
+              <Text style={[styles.paragraph, styles.container]}>
+                {item.title}
+              </Text>
+              <View style={styles.section}>
                 <Pressable onPress={() => handleEditTask(item.id)}>
-                  <Image source="https://cdn-icons-png.flaticon.com/128/1159/1159633.png" />
+                  <Feather name="edit" size={24} style={styles.color} />
                 </Pressable>
                 <Pressable onPress={() => handleDeleteTask(item.id)}>
-                  <Image source="https://cdn-icons-png.flaticon.com/128/3096/3096673.png" />
+                  <MaterialIcons
+                    name="delete-outline"
+                    size={24}
+                    style={styles.color}
+                  />
                 </Pressable>
               </View>
             </View>
           )}
         />
-        <View className="filters">
-          <View className="dropdown">
-            <Pressable className="dropbtn">
-              <Text>Filter</Text>
-            </Pressable>
-            <View className="dropdown-content">
-              <Pressable onPress={() => handleFilterChange("all")}>
-                <Text>All</Text>
-              </Pressable>
-              <Pressable onPress={() => handleFilterChange("uncompleted")}>
-                <Text>Uncompleted</Text>
-              </Pressable>
-              <Pressable onPress={() => handleFilterChange("completed")}>
-                <Text>Completed</Text>
-              </Pressable>
-            </View>
-          </View>
-          <View className="completed-task">
-            <Text>
-              Completed: {tasks.filter((task) => task.completed).length}
-            </Text>
-          </View>
-          <View className="remaining-task">
-            <Text>Total Tasks: {tasks.length}</Text>
-          </View>
+      </View>
+      <View style={[styles.section, styles.justifyContentBetween]}>
+        <Picker
+          selectedValue={filter}
+          onValueChange={(itemValue) => handleFilterChange(itemValue)}
+        >
+          <Picker.Item label="all" value="all" />
+          <Picker.Item label="uncompleted" value="uncompleted" />
+          <Picker.Item label="completed" value="completed" />
+        </Picker>
+        <View>
+          <Text style={styles.color}>
+            Completed: {tasks.filter((task) => task.completed).length}
+          </Text>
+        </View>
+        <View>
+          <Text style={styles.color}>Total Tasks: {tasks.length}</Text>
         </View>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = EStyleSheet.create({
   container: {
     flex: 1,
-    marginHorizontal: 16,
-    marginVertical: 32,
+  },
+  fullHeight: {
+    minHeight: "100%",
   },
   section: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  justifyContentBetween: {
+    justifyContent: "space-between",
+  },
+  alignItemsStart: {
+    alignItems: "flex-start",
   },
   paragraph: {
-    fontSize: 15,
+    margin: 24,
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "$textColor",
   },
   checkbox: {
     margin: 8,
+  },
+  padding: {
+    padding: 8,
+  },
+  pressable: {
+    borderWidth: 1,
+    margin: 8,
+    padding: 8,
+    borderColor: "$textColor",
+  },
+  lgText: {
+    fontSize: 24,
+    color: "$textColor",
+  },
+  color: {
+    color: "$textColor",
   },
 });
 
