@@ -1,4 +1,4 @@
-import { Pressable, Text, TextInput, View, FlatList } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Checkbox from "expo-checkbox";
@@ -6,6 +6,7 @@ import Toast from "react-native-root-toast";
 import EStyleSheet from "react-native-extended-stylesheet";
 import { Picker } from "@react-native-picker/picker";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { FlashList } from "@shopify/flash-list";
 
 const TodoList = () => {
   const [tasks, setTasks] = useState([]);
@@ -14,7 +15,7 @@ const TodoList = () => {
   const [editTaskId, setEditTaskId] = useState(null);
 
   useEffect(() => {
-    const fetchTodos = async () => {
+    const fetchData = async () => {
       try {
         const todos = await AsyncStorage.getItem("my-todo");
         if (todos !== null) {
@@ -25,8 +26,24 @@ const TodoList = () => {
       }
     };
 
-    fetchTodos();
+    fetchData();
   }, []);
+
+  const postData = async (updatedTasks, message) => {
+    try {
+      setTasks(updatedTasks);
+      await AsyncStorage.setItem("my-todo", JSON.stringify(updatedTasks));
+
+      if (message) {
+        Toast.show(message, {
+          duration: Toast.durations.SHORT,
+        });
+      }
+    } catch (error) {
+      console.log("Error change task:", error);
+      Toast.show("Error change task", { duration: Toast.durations.SHORT });
+    }
+  };
 
   const handleInputChange = (text) => {
     setInputValue(text);
@@ -47,32 +64,23 @@ const TodoList = () => {
       ? tasks.map((task) => (task.id === editTaskId ? addedTask : task))
       : [...tasks, addedTask];
 
-    try {
-      setTasks(updatedTasks);
-      await AsyncStorage.setItem("my-todo", JSON.stringify(updatedTasks));
-      setInputValue("");
-      Toast.show("Task added successfully", {
-        duration: Toast.durations.SHORT,
-      });
-    } catch (error) {
-      console.log("Error adding task:", error);
-      Toast.show("Error adding task", { duration: Toast.durations.SHORT });
+    postData(updatedTasks, `${editTaskId ? "add" : "update"} task success`);
+    setInputValue("");
+    if (editTaskId) {
+      setEditTaskId(null);
     }
   };
 
   const handleTaskCheckboxChange = (taskId) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId ? { ...task, completed: !task.completed } : task
     );
+    postData(updatedTasks);
   };
 
   const handleDeleteTask = (taskId) => {
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-    Toast.show("Task deleted successfully", {
-      duration: Toast.durations.SHORT,
-    });
+    const updatedTasks = tasks.filter((task) => task.id !== taskId);
+    postData(updatedTasks, "Task deleted successfully");
   };
 
   const handleEditTask = (taskId) => {
@@ -82,13 +90,13 @@ const TodoList = () => {
   };
 
   const handleCompleteAll = () => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => ({ ...task, completed: true }))
-    );
+    const updatedTasks = tasks.map((task) => ({ ...task, completed: true }));
+    postData(updatedTasks);
   };
 
   const handleClearCompleted = () => {
-    setTasks((prevTasks) => prevTasks.filter((task) => !task.completed));
+    const updatedTasks = tasks.filter((task) => !task.completed);
+    postData(updatedTasks);
   };
 
   const handleFilterChange = (filterType) => {
@@ -118,6 +126,7 @@ const TodoList = () => {
           autoFocus
           value={inputValue}
           onChangeText={(text) => handleInputChange(text)}
+          placeholderTextColor={styles.color.color}
         />
         <Pressable style={styles.pressable} onPress={() => handleSubmitText()}>
           <Text style={styles.lgText}>{editTaskId ? "Update" : "Add"}</Text>
@@ -135,8 +144,9 @@ const TodoList = () => {
         </Pressable>
       </View>
       <View style={[styles.section, styles.container, styles.alignItemsStart]}>
-        <FlatList
+        <FlashList
           data={filteredTasks}
+          estimatedItemSize={20}
           renderItem={({ item }) => (
             <View style={styles.section}>
               <Checkbox
@@ -164,14 +174,18 @@ const TodoList = () => {
         />
       </View>
       <View style={[styles.section, styles.justifyContentBetween]}>
-        <Picker
-          selectedValue={filter}
-          onValueChange={(itemValue) => handleFilterChange(itemValue)}
-        >
-          <Picker.Item label="all" value="all" />
-          <Picker.Item label="uncompleted" value="uncompleted" />
-          <Picker.Item label="completed" value="completed" />
-        </Picker>
+        <View>
+          <Picker
+            style={[styles.picker, styles.color]}
+            selectedValue={filter}
+            onValueChange={(itemValue) => handleFilterChange(itemValue)}
+            dropdownIconColor={styles.color.color}
+          >
+            <Picker.Item label="all" value="all" />
+            <Picker.Item label="uncompleted" value="uncompleted" />
+            <Picker.Item label="completed" value="completed" />
+          </Picker>
+        </View>
         <View>
           <Text style={styles.color}>
             Completed: {tasks.filter((task) => task.completed).length}
@@ -228,6 +242,9 @@ const styles = EStyleSheet.create({
   },
   color: {
     color: "$textColor",
+  },
+  picker: {
+    width: 150,
   },
 });
 
