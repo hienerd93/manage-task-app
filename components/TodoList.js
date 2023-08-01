@@ -8,10 +8,19 @@ import { Picker } from "@react-native-picker/picker";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 
+const QUOTES = [
+  "nullius in verba - Royal Society's motto",
+  "veni, vidi, vici - Caesar",
+  "je pense, donc je suis - Descartes",
+  "Gott ist tot - Nietzsche",
+];
+
+const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+
 const TodoList = () => {
   const [tasks, setTasks] = useState([]);
   const [inputValue, setInputValue] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("uncompleted");
   const [editTaskId, setEditTaskId] = useState(null);
 
   useEffect(() => {
@@ -116,14 +125,14 @@ const TodoList = () => {
 
   return (
     <View style={[styles.container, styles.minHeight, styles.padding]}>
-      <View style={styles.section}>
+      <View style={[styles.section, styles.flexColumn]}>
         <Text style={styles.paragraph}>Todo List</Text>
+        <Text style={styles.color}>{quote}</Text>
       </View>
-      <View style={[styles.section]}>
+      <View style={styles.section}>
         <TextInput
           style={[styles.container, styles.lgText]}
           placeholder="Add your todo"
-          autoFocus
           value={inputValue}
           onChangeText={(text) => handleInputChange(text)}
           placeholderTextColor={styles.color.color}
@@ -210,6 +219,9 @@ const styles = EStyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+  },
+  flexColumn: {
+    flexDirection: "column",
   },
   justifyContentBetween: {
     justifyContent: "space-between",
