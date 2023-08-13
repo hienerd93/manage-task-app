@@ -23,3 +23,14 @@ export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
 export JAVA_HOME=/opt/android-studio/jbr
 export PATH=$PATH:$JAVA_HOME/bin
 ```
+
+## How to generate the unsigned apk for android
+
+create /android/app/src/main/assets
+
+```bash
+react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res \
+&& cd android \
+&& ./gradlew clean\
+&& ./gradlew assembleDebug
+```
