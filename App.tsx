@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/AntDesign';
 
 interface Task {
   completed: boolean;
@@ -110,6 +110,12 @@ function App(): JSX.Element {
 
   const handleDeleteTask = (taskId: string) => {
     const updatedTasks = tasks.filter(task => task.id !== taskId);
+
+    if (taskId === editTaskId) {
+      setEditTaskId(undefined);
+      setInputValue('');
+    }
+
     postData(updatedTasks, 'Task deleted successfully');
   };
 
@@ -191,14 +197,12 @@ function App(): JSX.Element {
                 {item.title}
               </Text>
               <View style={styles.section}>
-                <Icon.Button
-                  name="edit"
-                  onPress={() => handleEditTask(item.id)}
-                />
-                <Icon.Button
-                  name="delete-outline"
-                  onPress={() => handleDeleteTask(item.id)}
-                />
+                <Pressable onPress={() => handleEditTask(item.id)}>
+                  <Icon name="edit" size={24} />
+                </Pressable>
+                <Pressable onPress={() => handleDeleteTask(item.id)}>
+                  <Icon name="delete" size={24} />
+                </Pressable>
               </View>
             </View>
           )}
