@@ -10,12 +10,12 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import {Picker} from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
 import Icon from 'react-native-vector-icons/AntDesign';
+import {RNThemeContext, themes, type RNTheme} from './ColorTheme';
 
 interface Task {
   completed: boolean;
@@ -32,11 +32,7 @@ const QUOTES = [
 const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const colorScheme = useColorScheme();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -151,138 +147,143 @@ function App(): JSX.Element {
   });
 
   return (
-    <SafeAreaView style={[backgroundStyle, styles.container]}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+    <RNThemeContext.Provider
+      value={colorScheme === 'dark' ? themes.dark : themes.light}>
+      <RNThemeContext.Consumer>
+        {theme => {
+          const styled = styledWithTheme(theme);
 
-      <View style={[styles.section, styles.flexColumn]}>
-        <Text style={styles.paragraph}>Todo List</Text>
-        <Text style={styles.color}>{quote}</Text>
-      </View>
-      <View style={styles.section}>
-        <TextInput
-          style={[styles.container, styles.lgText]}
-          placeholder="Add your todo"
-          value={inputValue}
-          onChangeText={text => handleInputChange(text)}
-          placeholderTextColor={styles.color.color}
-        />
-        <Pressable style={styles.pressable} onPress={() => handleSubmitText()}>
-          <Text style={styles.lgText}>{editTaskId ? 'Update' : 'Add'}</Text>
-        </Pressable>
-      </View>
-      <View style={styles.section}>
-        <Pressable style={styles.pressable} onPress={() => handleCompleteAll()}>
-          <Text style={styles.color}>Complete all tasks</Text>
-        </Pressable>
-        <Pressable
-          style={styles.pressable}
-          onPress={() => handleClearCompleted()}>
-          <Text style={styles.color}>Delete comp tasks</Text>
-        </Pressable>
-      </View>
-      <View style={[styles.section, styles.container, styles.alignItemsStart]}>
-        <FlatList
-          data={filteredTasks}
-          renderItem={({item}) => (
-            <View style={styles.section}>
-              <CheckBox
-                style={styles.checkbox}
-                value={item.completed}
-                onValueChange={() => handleTaskCheckboxChange(item.id)}
+          return (
+            <SafeAreaView style={styled.container}>
+              <StatusBar
+                barStyle={
+                  colorScheme === 'dark' ? 'dark-content' : 'light-content'
+                }
+                backgroundColor={theme.BackgroundColor}
               />
-              <Text style={[styles.paragraph, styles.container]}>
-                {item.title}
-              </Text>
-              <View style={styles.section}>
-                <Pressable onPress={() => handleEditTask(item.id)}>
-                  <Icon name="edit" size={24} />
-                </Pressable>
-                <Pressable onPress={() => handleDeleteTask(item.id)}>
-                  <Icon name="delete" size={24} />
+
+              <View style={[styled.section, styled.flexColumn]}>
+                <Text style={[styled.text, styled.heading]}>Todo List</Text>
+                <Text style={styled.text}>{quote}</Text>
+              </View>
+              <View style={styled.section}>
+                <TextInput
+                  style={styled.container}
+                  placeholder="Add your todo"
+                  value={inputValue}
+                  onChangeText={text => handleInputChange(text)}
+                  placeholderTextColor={theme.PlaceholderTextColor}
+                />
+                <Pressable
+                  style={styled.pressable}
+                  onPress={() => handleSubmitText()}>
+                  <Text style={styled.text}>
+                    {editTaskId ? 'Update' : 'Add'}
+                  </Text>
                 </Pressable>
               </View>
-            </View>
-          )}
-        />
-      </View>
-      <View style={[styles.section, styles.justifyContentBetween]}>
-        <View>
-          <Picker
-            style={[styles.picker, styles.color]}
-            selectedValue={filter}
-            onValueChange={itemValue => handleFilterChange(itemValue)}
-            dropdownIconColor={styles.color.color}>
-            <Picker.Item label="all" value="all" />
-            <Picker.Item label="uncompleted" value="uncompleted" />
-            <Picker.Item label="completed" value="completed" />
-          </Picker>
-        </View>
-        <View>
-          <Text style={styles.color}>
-            Completed: {tasks.filter(task => task.completed).length}
-          </Text>
-        </View>
-        <View>
-          <Text style={styles.color}>Total Tasks: {tasks.length}</Text>
-        </View>
-      </View>
-    </SafeAreaView>
+              <View style={styled.section}>
+                <Pressable
+                  style={styled.pressable}
+                  onPress={() => handleCompleteAll()}>
+                  <Text style={styled.text}>Complete all tasks</Text>
+                </Pressable>
+                <Pressable
+                  style={styled.pressable}
+                  onPress={() => handleClearCompleted()}>
+                  <Text style={styled.text}>Delete comp tasks</Text>
+                </Pressable>
+              </View>
+              <View style={styled.container}>
+                <FlatList
+                  data={filteredTasks}
+                  renderItem={({item}) => (
+                    <View style={styled.section}>
+                      <CheckBox
+                        value={item.completed}
+                        onValueChange={() => handleTaskCheckboxChange(item.id)}
+                      />
+                      <Text style={styled.container}>{item.title}</Text>
+                      <View style={styled.section}>
+                        <Pressable onPress={() => handleEditTask(item.id)}>
+                          <Icon name="edit" size={24} />
+                        </Pressable>
+                        <Pressable onPress={() => handleDeleteTask(item.id)}>
+                          <Icon name="delete" size={24} />
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                />
+              </View>
+              <View style={[styled.section, styled.justifySpace]}>
+                <Picker
+                  style={styled.checkbox}
+                  selectedValue={filter}
+                  onValueChange={itemValue => handleFilterChange(itemValue)}
+                  dropdownIconColor={theme.TextColor}>
+                  <Picker.Item label="all" value="all" />
+                  <Picker.Item label="uncompleted" value="uncompleted" />
+                  <Picker.Item label="completed" value="completed" />
+                </Picker>
+                <View>
+                  <Text style={styled.text}>
+                    Completed: {tasks.filter(task => task.completed).length}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={styled.text}>Total Tasks: {tasks.length}</Text>
+                </View>
+              </View>
+            </SafeAreaView>
+          );
+        }}
+      </RNThemeContext.Consumer>
+    </RNThemeContext.Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  fullHeight: {
-    minHeight: '100%',
-  },
-  section: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  flexColumn: {
-    flexDirection: 'column',
-  },
-  justifyContentBetween: {
-    justifyContent: 'space-between',
-  },
-  alignItemsStart: {
-    alignItems: 'flex-start',
-  },
-  paragraph: {
-    margin: 24,
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#000',
-  },
-  checkbox: {
-    margin: 8,
-  },
-  padding: {
-    padding: 8,
-  },
-  pressable: {
-    borderWidth: 1,
-    margin: 8,
-    padding: 8,
-    borderColor: '#000',
-  },
-  lgText: {
-    fontSize: 24,
-    color: '#000',
-  },
-  color: {
-    color: '#000',
-  },
-  picker: {
-    width: 150,
-  },
-});
+const styledWithTheme = (theme: RNTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.BackgroundColor,
+      padding: 8,
+    },
+    heading: {
+      fontSize: 32,
+      fontWeight: '700',
+      textShadowColor: '#ddd',
+      textShadowOffset: {width: 0.1, height: 0.1},
+      textShadowRadius: 0.5,
+    },
+    section: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.BackgroundColor,
+      margin: 8,
+    },
+    checkbox: {
+      width: 160,
+      backgroundColor: theme.BackgroundColor,
+      color: theme.TextColor,
+    },
+    flexColumn: {
+      flexDirection: 'column',
+    },
+    justifySpace: {
+      justifyContent: 'space-between',
+    },
+    pressable: {
+      borderStyle: 'solid',
+      borderWidth: 1,
+      borderColor: theme.BorderColor,
+      padding: 8,
+    },
+    text: {
+      color: theme.TextColor,
+    },
+  });
 
 export default App;
